@@ -19,7 +19,7 @@ jobs:
           pkg-manager: npm
       - run:
           name: Vérification de la version de Node.js
-          command: echo "Version Node: $(node --version)"
+          command: node --version
       - persist_to_workspace:
           root: .
           paths:
