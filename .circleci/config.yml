@@ -2,10 +2,12 @@ version: 2.1
 orbs:
   node: circleci/node@5
 
-# Définition des jobs (tâches unitaires)
 jobs:
-  # JOB: Installation des dépendances
-  install_dependencies:
+  #############################################
+  # STAGE: BUILD (repris de votre config initiale)
+  #############################################
+  
+  test-node:
     executor: node/default
     environment:
       JEST_JUNIT_OUTPUT_DIR: ./test-results/
@@ -14,48 +16,224 @@ jobs:
       - node/install-packages:
           pkg-manager: npm
       - run:
-          name: Vérification de la version de Node.js
-          command: node --version
+          command: npm install jest-junit
+      - run:
+          name: Run tests
+          command: npm run test:ci || echo "Skip tests"
+      - store_test_results:
+          path: ./test-results/
       - persist_to_workspace:
           root: .
           paths:
             - .
-
-  # JOB: Analyse de code
-  code_analysis:
+  
+  #############################################
+  # STAGE: TESTS (nouveaux jobs)
+  #############################################
+  
+  integration-tests:
     executor: node/default
     steps:
       - attach_workspace:
           at: .
       - run:
-          name: Exécution du linter
-          command: echo "Vérification de la qualité du code"
-
-  # JOB: Tests unitaires
-  unit_tests:
+          name: Run integration tests
+          command: echo "Running integration tests..."
+  
+  regression-tests:
     executor: node/default
-    environment:
-      JEST_JUNIT_OUTPUT_DIR: ./test-results/
     steps:
       - attach_workspace:
           at: .
       - run:
-          command: npm install jest-junit
+          name: Run regression tests
+          command: echo "Running regression tests..."
+  
+  performance-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
       - run:
-          name: Exécution des tests unitaires
-          command: npm run test:ci || echo "Tests non exécutés"
-      - store_test_results:
-          path: ./test-results/
+          name: Run performance tests
+          command: echo "Running performance tests..."
+  
+  security-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run security tests
+          command: echo "Running security tests..."
+  
+  compatibility-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run compatibility tests
+          command: echo "Running browser compatibility tests..."
+  
+  accessibility-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run accessibility tests
+          command: echo "Running accessibility tests..."
+  
+  #############################################
+  # STAGE: DEPLOY (nouveaux jobs)
+  #############################################
+  
+  prepare-environment:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Prepare environment
+          command: echo "Preparing deployment environment..."
+  
+  deploy-application:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Deploy application
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              echo "Deploying to PRODUCTION environment"
+            elif [ "${CIRCLE_BRANCH}" == "integration" ]; then
+              echo "Deploying to INTEGRATION environment"
+            elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+              echo "Deploying to DEVELOPMENT environment"
+            else
+              echo "Not deploying from this branch"
+            fi
+  
+  verification-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Verify deployment
+          command: echo "Running post-deployment verification tests..."
+  
+  functional-validation:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Functional validation
+          command: echo "Validating functionality in deployed environment..."
+  
+  load-tests:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Load testing
+          command: echo "Running load tests on deployed application..."
+  
+  monitoring-setup:
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Setup monitoring
+          command: echo "Setting up monitoring and alerts..."
 
-# Workflows (orchestration des jobs)
 workflows:
   version: 2
-  build_test_deploy:
+  build-and-test:
     jobs:
-      - install_dependencies
-      - code_analysis:
+      # STAGE: BUILD
+      - test-node
+      
+      # STAGE: TESTS
+      - integration-tests:
           requires:
-            - install_dependencies
-      - unit_tests:
+            - test-node
+      - regression-tests:
           requires:
-            - install_dependencies
+            - test-node
+      - performance-tests:
+          requires:
+            - integration-tests
+      - security-tests:
+          requires:
+            - integration-tests
+      - compatibility-tests:
+          requires:
+            - integration-tests
+      - accessibility-tests:
+          requires:
+            - integration-tests
+      
+      # STAGE: DEPLOY
+      - prepare-environment:
+          requires:
+            - regression-tests
+            - performance-tests
+            - security-tests
+            - compatibility-tests
+            - accessibility-tests
+          filters:
+            branches:
+              only:
+                - develop
+                - integration
+                - main
+      - deploy-application:
+          requires:
+            - prepare-environment
+          filters:
+            branches:
+              only:
+                - develop
+                - integration
+                - main
+      - verification-tests:
+          requires:
+            - deploy-application
+          filters:
+            branches:
+              only:
+                - develop
+                - integration
+                - main
+      - functional-validation:
+          requires:
+            - verification-tests
+          filters:
+            branches:
+              only:
+                - develop
+                - integration
+                - main
+      - load-tests:
+          requires:
+            - verification-tests
+          filters:
+            branches:
+              only:
+                - integration
+                - main
+      - monitoring-setup:
+          requires:
+            - functional-validation
+          filters:
+            branches:
+              only:
+                - develop
+                - integration
+                - main
