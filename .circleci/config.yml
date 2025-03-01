@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.1.0
+  node: circleci/node@5
 
 # Définition des jobs (tâches unitaires)
 jobs:
@@ -11,17 +11,17 @@ jobs:
   # JOB: Installation des dépendances
   install_dependencies:
     executor: node/default
+    environment:
+      JEST_JUNIT_OUTPUT_DIR: ./test-results/
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
-          cache-path: ~/project/node_modules
-          cache-version: v1
       - run:
-          name: "Vérification de la version de Node.js"
-          command: echo "Vérification de la version Node $(node --version)"
+          name: Vérification de la version de Node.js
+          command: echo "Version Node $(node --version)"
       - persist_to_workspace:
-          root: ~/project
+          root: .
           paths:
             - .
 
@@ -30,31 +30,31 @@ jobs:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Exécution du linter"
-          command: echo "Analyse du code avec ESLint"
+          name: Exécution du linter
+          command: echo "Vérification de la qualité du code"
       - run:
-          name: "Vérification des types TypeScript"
+          name: Vérification des types
           command: echo "Vérification des types TypeScript"
 
   # JOB: Cleaning et Packaging
-  cleaning_packaging:
+  build_package:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Nettoyage des fichiers temporaires"
-          command: echo "Nettoyage des fichiers temporaires et non nécessaires"
+          name: Nettoyage des fichiers temporaires
+          command: echo "Nettoyage des fichiers temporaires"
       - run:
-          name: "Build du projet Next.js"
-          command: echo "Build du projet Next.js pour production"
+          name: Build du projet
+          command: echo "Build du projet Next.js"
       - persist_to_workspace:
-          root: ~/project
+          root: .
           paths:
             - .
-
+  
   #############################################
   # STAGE: TESTS
   #############################################
@@ -62,174 +62,173 @@ jobs:
   # JOB: Tests unitaires
   unit_tests:
     executor: node/default
+    environment:
+      JEST_JUNIT_OUTPUT_DIR: ./test-results/
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Exécution des tests unitaires"
-          command: echo "Exécution des tests unitaires avec Jest"
+          command: npm install jest-junit
+      - run:
+          name: Exécution des tests unitaires
+          command: npm run test:ci
       - store_test_results:
-          path: test-results
+          path: ./test-results/
 
   # JOB: Tests d'intégration
   integration_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Exécution des tests d'intégration"
-          command: echo "Exécution des tests d'intégration entre composants"
+          name: Exécution des tests d'intégration
+          command: echo "Tests d'intégration entre composants"
 
   # JOB: Tests de régression
   regression_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Exécution des tests de régression"
-          command: echo "Vérification que les bugs corrigés ne réapparaissent pas"
+          name: Exécution des tests de régression
+          command: echo "Vérification des non-régressions"
 
   # JOB: Tests de performance
   performance_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Exécution des tests de performance"
-          command: echo "Analyse des performances de l'application (Lighthouse, etc.)"
+          name: Exécution des tests de performance
+          command: echo "Tests de performance (lighthouse)"
 
   # JOB: Tests de sécurité
   security_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Analyse des dépendances"
-          command: echo "Analyse des vulnérabilités des dépendances npm"
+          name: Analyse des vulnérabilités
+          command: echo "Analyse des vulnérabilités"
 
   # JOB: Tests de compatibilité
   compatibility_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Tests de compatibilité navigateurs"
-          command: echo "Vérification de la compatibilité sur différents navigateurs"
+          name: Tests de compatibilité navigateurs
+          command: echo "Tests de compatibilité cross-browser"
 
   # JOB: Tests d'accessibilité
   accessibility_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Tests d'accessibilité"
-          command: echo "Vérification de la conformité aux normes WCAG"
+          name: Tests d'accessibilité
+          command: echo "Vérification des normes d'accessibilité"
 
   #############################################
   # STAGE: DEPLOY
   #############################################
   
-  # JOB: Préparation de l'environnement de déploiement
+  # JOB: Préparation de l'environnement
   prepare_environment:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Configuration de l'environnement"
-          command: echo "Préparation de l'environnement de déploiement"
+          name: Préparation de l'environnement
+          command: echo "Configuration de l'environnement cible"
 
-  # JOB: Déploiement de l'application
+  # JOB: Déploiement
   deploy_application:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Déploiement sur l'environnement cible"
+          name: Déploiement
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              echo "Déploiement sur l'environnement de PRODUCTION"
+              echo "Déploiement en PRODUCTION"
             elif [ "${CIRCLE_BRANCH}" == "integration" ]; then
-              echo "Déploiement sur l'environnement d'INTEGRATION"
+              echo "Déploiement en INTEGRATION"
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-              echo "Déploiement sur l'environnement de DEVELOPMENT"
+              echo "Déploiement en DEVELOPMENT"
             fi
 
-  # JOB: Tests de vérification
+  # JOB: Vérification du déploiement
   verification_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Tests de vérification post-déploiement"
-          command: echo "Vérification que l'application est correctement déployée"
+          name: Tests de vérification
+          command: echo "Vérification post-déploiement"
 
-  # JOB: Tests de validation fonctionnelle
+  # JOB: Validation fonctionnelle
   functional_validation:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Tests de validation fonctionnelle"
-          command: echo "Validation des fonctionnalités principales en environnement déployé"
+          name: Validation fonctionnelle
+          command: echo "Tests fonctionnels sur environnement déployé"
 
   # JOB: Tests de charge
   load_tests:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Tests de charge"
-          command: echo "Tests de charge pour vérifier la capacité de l'application sous stress"
+          name: Tests de charge
+          command: echo "Tests de performance sous charge"
 
-  # JOB: Surveillance et suivi
+  # JOB: Monitoring
   monitoring:
     executor: node/default
     steps:
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
-          name: "Mise en place du monitoring"
-          command: echo "Configuration de la surveillance et des alertes"
+          name: Mise en place du monitoring
+          command: echo "Configuration du monitoring"
 
 # Workflows (orchestration des jobs)
 workflows:
   version: 2
 
-  # Workflow principal qui gère tous les flux de travail en fonction des branches
+  # Workflow principal de CI/CD
   build_test_deploy:
     jobs:
-      #############################################
-      # STAGE: BUILD - Pour toutes les branches
-      #############################################
+      # STAGE BUILD
       - install_dependencies
       
       - code_analysis:
           requires:
             - install_dependencies
       
-      - cleaning_packaging:
+      - build_package:
           requires:
             - code_analysis
           filters:
             branches:
-              # Éviter le build complet pour les branches feature
               not:
                 - /^feature.*/
-
-      #############################################
-      # STAGE: TESTS - Filtres variés selon tests
-      #############################################
+      
+      # STAGE TESTS
       - unit_tests:
           requires:
             - install_dependencies
@@ -239,7 +238,6 @@ workflows:
             - unit_tests
           filters:
             branches:
-              # Important pour toutes les branches sauf features
               not:
                 - /^feature.*/
       
@@ -248,7 +246,6 @@ workflows:
             - unit_tests
           filters:
             branches:
-              # Uniquement sur les branches principales et hotfix
               only:
                 - develop
                 - integration
@@ -257,10 +254,9 @@ workflows:
       
       - performance_tests:
           requires:
-            - unit_tests
+            - integration_tests
           filters:
             branches:
-              # Uniquement pour integration et production
               only:
                 - integration
                 - main
@@ -270,7 +266,6 @@ workflows:
             - integration_tests
           filters:
             branches:
-              # Éviter sur les features pour gagner du temps
               not:
                 - /^feature.*/
       
@@ -279,7 +274,6 @@ workflows:
             - integration_tests
           filters:
             branches:
-              # Uniquement en pré-production et production
               only:
                 - integration
                 - main
@@ -289,22 +283,17 @@ workflows:
             - integration_tests
           filters:
             branches:
-              # Uniquement en pré-production et production
               only:
                 - integration
                 - main
-
-      #############################################
-      # STAGE: DEPLOY - Filtres selon environnement
-      #############################################
+      
+      # STAGE DEPLOY
       - prepare_environment:
           requires:
-            - cleaning_packaging
+            - build_package
             - unit_tests
-            - integration_tests
           filters:
             branches:
-              # Uniquement pour les branches d'environnement
               only:
                 - develop
                 - integration
@@ -315,7 +304,6 @@ workflows:
             - prepare_environment
           filters:
             branches:
-              # Uniquement pour les branches d'environnement
               only:
                 - develop
                 - integration
@@ -326,7 +314,6 @@ workflows:
             - deploy_application
           filters:
             branches:
-              # Uniquement pour les branches d'environnement
               only:
                 - develop
                 - integration
@@ -337,7 +324,6 @@ workflows:
             - verification_tests
           filters:
             branches:
-              # Uniquement pour les branches d'environnement
               only:
                 - develop
                 - integration
@@ -348,7 +334,6 @@ workflows:
             - verification_tests
           filters:
             branches:
-              # Tests de charge seulement pour integration et production
               only:
                 - integration
                 - main
@@ -358,7 +343,6 @@ workflows:
             - functional_validation
           filters:
             branches:
-              # Monitoring pour tous les environnements
               only:
                 - develop
                 - integration
