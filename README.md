@@ -41,3 +41,14 @@ pnpm test
 ```
 
 Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+
+
+
+# Installation de l'outil CLI (si vous êtes sur macOS avec Homebrew)
+brew install circleci
+
+# Ou installation via npm
+npm install -g circleci-cli
+
+# Validation du fichier de configuration
+circleci config validate
