@@ -19,7 +19,7 @@ jobs:
           cache-version: v1
       - run:
           name: "Vérification de la version de Node.js"
-          command: echo "Vérification de la version Node: $(node --version)"
+          command: echo "Vérification de la version Node $(node --version)"
       - persist_to_workspace:
           root: ~/project
           paths:
