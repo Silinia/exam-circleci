@@ -1,13 +1,21 @@
-type Props = {
-  params: {
-    slug: string;
-  };
-};
+import { NextPage } from 'next';
 
-export async function generateMetadata({ params }: Props) {
+interface PageParams {
+  slug: string;
+}
+
+// Pour generateMetadata
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: PageParams 
+}) {
   return { title: `Post: ${params.slug}` };
 }
 
-export default function Page({ params }: Props) {
+// Pour la page elle-même
+const Page: NextPage<{ params: PageParams }> = ({ params }) => {
   return <h1>Slug: {params.slug}</h1>;
-}
+};
+
+export default Page;
