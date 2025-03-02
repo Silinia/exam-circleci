@@ -99,21 +99,21 @@ jobs:
           command: echo "Preparing deployment environment..."
   
   deploy_to_vercel:
-  executor: node/default
-  steps:
-    - attach_workspace:
-        at: .
-    - run:
-        name: Install Vercel CLI
-        command: npm install -g vercel
-    - run:
-        name: Deploy to Vercel
-        command: |
-          if [ "${CIRCLE_BRANCH}" == "main" ]; then
-            vercel --prod --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
-          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-            vercel --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
-          fi
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Vercel CLI
+          command: npm install -g vercel
+      - run:
+          name: Deploy to Vercel
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              vercel --prod --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+            elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+              vercel --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+            fi
   
   verification-tests:
     executor: node/default
@@ -194,7 +194,7 @@ workflows:
                 - main
       - deploy_to_vercel:
           requires:
-            - build_package
+            - test-node
           filters:
             branches:
               only:
@@ -202,7 +202,7 @@ workflows:
                 - main
       - verification-tests:
           requires:
-            - deploy-application
+            - deploy_to_vercel
           filters:
             branches:
               only:
