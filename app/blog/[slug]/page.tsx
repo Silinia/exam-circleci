@@ -1,15 +1,21 @@
+import { NextPage } from 'next';
+
+interface PageParams {
+  slug: string;
+}
+
+// Pour generateMetadata
 export async function generateMetadata({ 
   params 
 }: { 
-  params: { slug: string } 
+  params: PageParams 
 }) {
   return { title: `Post: ${params.slug}` };
 }
 
-export default function Page({ 
-  params 
-}: { 
-  params: { slug: string } 
-}) {
+// Pour la page elle-même
+const Page: NextPage<{ params: PageParams }> = ({ params }) => {
   return <h1>Slug: {params.slug}</h1>;
-}
+};
+
+export default Page;
