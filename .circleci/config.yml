@@ -98,23 +98,22 @@ jobs:
           name: Prepare environment
           command: echo "Preparing deployment environment..."
   
-  deploy-application:
-    executor: node/default
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Deploy application
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              echo "Deploying to PRODUCTION environment"
-            elif [ "${CIRCLE_BRANCH}" == "integration" ]; then
-              echo "Deploying to INTEGRATION environment"
-            elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-              echo "Deploying to DEVELOPMENT environment"
-            else
-              echo "Not deploying from this branch"
-            fi
+  deploy_to_vercel:
+  executor: node/default
+  steps:
+    - attach_workspace:
+        at: .
+    - run:
+        name: Install Vercel CLI
+        command: npm install -g vercel
+    - run:
+        name: Deploy to Vercel
+        command: |
+          if [ "${CIRCLE_BRANCH}" == "main" ]; then
+            vercel --prod --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+            vercel --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+          fi
   
   verification-tests:
     executor: node/default
@@ -193,14 +192,13 @@ workflows:
                 - develop
                 - integration
                 - main
-      - deploy-application:
+      - deploy_to_vercel:
           requires:
-            - prepare-environment
+            - build_package
           filters:
             branches:
               only:
                 - develop
-                - integration
                 - main
       - verification-tests:
           requires:
