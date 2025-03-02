@@ -5,7 +5,7 @@ interface CounterProps {
   initialValue?: number;
 }
 
-const CounterModule: React.FC<CounterProps> = ({ initialValue = 0 }) => {
+const CounterModue: React.FC<CounterProps> = ({ initialValue = 0 }) => {
   const [count, setCount] = useState<number>(initialValue);
 
   const increment = (): void => setCount(count + 1);
