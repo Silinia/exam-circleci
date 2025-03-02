@@ -110,9 +110,9 @@ jobs:
           name: Deploy to Vercel
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              vercel --prod --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+              vercel --prod --token ${VERCEL_TOKEN	} --yes
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-              vercel --token ${HPCfsOMPkBwZLrjVoLQYshhT} --yes
+              vercel --token ${VERCEL_TOKEN	} --yes
             fi
   
   verification-tests:
